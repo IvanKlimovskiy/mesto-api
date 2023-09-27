@@ -68,7 +68,7 @@ const getUser = (req: Request, res: Response) => {
 const updateProfile = (req: Request, res: Response) => {
   const { name, about }: UserBody = req.body;
   const id = req.user._id;
-  User.findByIdAndUpdate(id, { name, about }, { new: true })
+  User.findByIdAndUpdate(id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (user) {
         res.json({
@@ -93,9 +93,14 @@ const updateProfile = (req: Request, res: Response) => {
 const updateAvatar = (req: Request, res: Response) => {
   const { avatar }: UserBody = req.body;
   const id = req.user._id;
-  User.findByIdAndUpdate(id, avatar, {
-    new: true,
-  })
+  User.findByIdAndUpdate(
+    id,
+    { avatar },
+    {
+      new: true,
+      runValidators: true,
+    }
+  )
     .then((user) => {
       if (user) {
         res.json({
