@@ -1,20 +1,54 @@
 import { Schema, model } from 'mongoose';
+import bcrypt from 'bcrypt';
+import { User, UserModel } from '../types';
 
-import { User } from '../types';
-
-const userSchema = new Schema<User>({
+const userSchema = new Schema<User, UserModel>({
   name: {
     type: String,
+    minlength: 2,
+    maxlength: 30,
+    default: 'Жак-Ив-Кусто',
+  },
+  email: {
+    type: String,
+    unique: true,
     required: true,
+  },
+  password: {
+    type: String,
+    required: true,
+    select: false,
+  },
+  isActivated: {
+    type: Boolean,
+    default: false,
+  },
+  activationLink: {
+    type: String,
+    default: '',
   },
   about: {
     type: String,
-    required: true,
+    minlength: 2,
+    maxlength: 200,
+    default: 'Исследователь',
   },
   avatar: {
     type: String,
-    required: true,
+    default: 'https://tvcenter.ru/wp-content/uploads/2021/02/image-4.jpg',
   },
 });
 
-export default model<User>('user', userSchema);
+userSchema.static('findUserByCredentials', async function findUserByCredentials(email: string, password: string) {
+  const user = await this.findOne({ email });
+  if (!user) {
+    return Promise.reject(new Error('Неправильные почта или пароль'));
+  }
+  const matched = await bcrypt.compare(password, user.password);
+  if (!matched) {
+    return Promise.reject(new Error('Неправильные почта или пароль'));
+  }
+  return user;
+});
+
+export default model<User, UserModel>('user', userSchema);

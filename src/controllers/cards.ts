@@ -1,12 +1,11 @@
-import { Response, Request } from 'express';
-
-import { ERROR_CODE, INCORECT_DATA_CODE, NOT_FOUND_CODE } from '../constants/constants';
-
+import { Response, Request, NextFunction } from 'express';
 import { CardBody } from '../types';
-
 import Card from '../models/card';
+import NotFoundError from '../errors/not-found-error';
+import IncorrectData from '../errors/incorrect-data';
+import { handleErrors } from '../utils';
 
-const createCard = (req: Request, res: Response) => {
+const createCard = (req: Request, res: Response, next: NextFunction) => {
   const owner = req.user._id;
   const { name, link }: CardBody = req.body;
   Card.create({ name, link, owner })
@@ -19,19 +18,15 @@ const createCard = (req: Request, res: Response) => {
           },
         });
       } else {
-        res.status(INCORECT_DATA_CODE).send({ message: 'Введены некорректные данные!' });
+        throw new IncorrectData('Введены некорректные данные!');
       }
     })
     .catch((error) => {
-      if (error.name === 'ValidationError') {
-        res.status(INCORECT_DATA_CODE).send({ message: 'Введены некорректные данные' });
-      } else {
-        res.status(ERROR_CODE).send({ message: 'Произошла ошибка' });
-      }
+      handleErrors(error, next);
     });
 };
 
-const getCards = (req: Request, res: Response) => {
+const getCards = (req: Request, res: Response, next: NextFunction) => {
   Card.find()
     .then((cards) => {
       if (cards) {
@@ -42,15 +37,15 @@ const getCards = (req: Request, res: Response) => {
           },
         });
       } else {
-        res.status(NOT_FOUND_CODE).send({ message: 'Карточки не найдены' });
+        throw new NotFoundError('Карточки не найдены');
       }
     })
-    .catch(() => {
-      res.status(ERROR_CODE).send({ message: 'Произошла ошибка' });
+    .catch((error) => {
+      handleErrors(error, next);
     });
 };
 
-const deleteCard = (req: Request, res: Response) => {
+const deleteCard = (req: Request, res: Response, next: NextFunction) => {
   const { cardId } = req.params;
   Card.findByIdAndDelete(cardId)
     .then((card) => {
@@ -62,21 +57,15 @@ const deleteCard = (req: Request, res: Response) => {
           },
         });
       } else {
-        res.status(NOT_FOUND_CODE).send({ message: 'Карточка не найдена' });
+        throw new NotFoundError('Карточка не найдена');
       }
     })
     .catch((error) => {
-      if (error.name === 'ValidationError') {
-        res.status(INCORECT_DATA_CODE).send({ message: 'Введены некорректные данные' });
-      } else if (error.name === 'CastError') {
-        res.status(INCORECT_DATA_CODE).send({ message: 'Некорректный идентификатор' });
-      } else {
-        res.status(ERROR_CODE).send({ message: 'Произошла ошибка' });
-      }
+      handleErrors(error, next);
     });
 };
 
-const likeCard = (req: Request, res: Response) => {
+const likeCard = (req: Request, res: Response, next: NextFunction) => {
   const likedUserId = req.user._id;
   const { cardId } = req.params;
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: likedUserId } }, { new: true })
@@ -89,21 +78,15 @@ const likeCard = (req: Request, res: Response) => {
           },
         });
       } else {
-        res.status(INCORECT_DATA_CODE).send({ message: 'Карточка не найдена' });
+        throw new NotFoundError('Карточка не найдена');
       }
     })
     .catch((error) => {
-      if (error.name === 'ValidationError') {
-        res.status(INCORECT_DATA_CODE).send({ message: 'Введены некорректные данные' });
-      } else if (error.name === 'CastError') {
-        res.status(INCORECT_DATA_CODE).send({ message: 'Некорректный идентификатор' });
-      } else {
-        res.status(ERROR_CODE).send({ message: 'Произошла ошибка' });
-      }
+      handleErrors(error, next);
     });
 };
 
-const dislikeCard = (req: Request, res: Response) => {
+const dislikeCard = (req: Request, res: Response, next: NextFunction) => {
   const likedUserId = req.user._id;
   const { cardId } = req.params;
   Card.findByIdAndUpdate(cardId, { $pull: { likes: likedUserId } }, { new: true })
@@ -111,22 +94,14 @@ const dislikeCard = (req: Request, res: Response) => {
       if (card) {
         res.json({
           status: 'success',
-          data: {
-            card,
-          },
+          data: { card },
         });
       } else {
-        res.status(INCORECT_DATA_CODE).send({ message: 'Карточка не найдена' });
+        throw new NotFoundError('Карточка не найдена');
       }
     })
     .catch((error) => {
-      if (error.name === 'ValidationError') {
-        res.status(INCORECT_DATA_CODE).send({ message: 'Введены некорректные данные' });
-      } else if (error.name === 'CastError') {
-        res.status(INCORECT_DATA_CODE).send({ message: 'Некорректный идентификатор' });
-      } else {
-        res.status(ERROR_CODE).send({ message: 'Произошла ошибка' });
-      }
+      handleErrors(error, next);
     });
 };
 

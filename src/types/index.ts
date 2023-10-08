@@ -1,30 +1,45 @@
-import { Schema } from 'mongoose';
+import { Model, Document, Schema } from 'mongoose';
 
 const { ObjectId } = Schema.Types;
-export type Card = {
+export interface Card {
   name: String;
   link: String;
   owner: typeof ObjectId;
   likes: (typeof ObjectId)[];
   createdAt: Date;
-};
+}
 
-export type User = {
-  name: String;
-  about: String;
-  avatar: String;
-};
+export interface User {
+  name: string;
+  email: string;
+  password: string;
+  isActivated: boolean;
+  activationLink: string;
+  about: string;
+  avatar: string;
+}
 
-export type CardBody = {
-  name: String;
-  link: String;
-  owner: String;
-  likes: String[];
-  createdAt: String;
-};
+export interface UserModel extends Model<User> {
+  findUserByCredentials: (email: string, password: string) => Promise<Document<User>>;
+}
 
-export type UserBody = {
-  name: String;
-  about: String;
-  avatar: String;
-};
+export interface CardBody {
+  name: string;
+  link: string;
+  owner: string;
+  likes: string[];
+  createdAt: string;
+}
+
+export interface UserBodyRequest {
+  name: string;
+  email: string;
+  password: string;
+  isActivated: boolean;
+  about: string;
+  avatar: string;
+}
+
+export interface ErrorStatusCode extends Error {
+  statusCode: number;
+}
