@@ -71,4 +71,6 @@ const start = async () => {
   }
 };
 
-start().then();
+start().then(() => {
+  console.log(`Всё работает корректно`);
+});

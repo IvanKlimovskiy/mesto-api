@@ -42,17 +42,15 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
       User.create({ email, password: hashedPassword, activationLink, ...rest })
         .then((user) => {
           if (JWT_SECRET) {
-            const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '15m' });
+            const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '15d' });
             if (user) {
               const { name, about, isActivated, avatar } = user;
-              res
-                .json({
-                  status: 'success',
-                  data: {
-                    user: { name, about, isActivated, avatar },
-                  },
-                })
-                .cookie('token', token, { maxAge: 3600000 * 24 * 7, httpOnly: true });
+              res.json({
+                status: 'success',
+                data: {
+                  user: { name, about, isActivated, avatar, token },
+                },
+              });
             } else {
               throw new NotFoundError('Пользователь не найден');
             }
