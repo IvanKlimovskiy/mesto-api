@@ -1,25 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { UNAUTHORIZED_CODE } from '../constants';
+import ServerSideError from '../errors/server-side-error';
 import { JWT_SECRET } from '../controllers/users';
 import UnauthorizedError from '../errors/unauthorized-error';
 
 export default (req: Request, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    return res.status(UNAUTHORIZED_CODE).send({ message: 'Требуется авторизация' });
+    const error = new UnauthorizedError('Требуется авторизация');
+    return next(error);
   }
 
   const token = authorization.replace('Bearer ', '');
-  let payload: jwt.JwtPayload | string = 'Необходима авторизация';
+  let payload;
 
   try {
     if (JWT_SECRET) {
       payload = jwt.verify(token, JWT_SECRET);
+    } else {
+      throw new ServerSideError('Что-то пошло не так');
     }
-  } catch (e) {
-    const err = new UnauthorizedError('Необходима авторизация');
-    return next(err);
+  } catch (error) {
+    return next(error);
   }
 
   req.user = payload as jwt.JwtPayload;

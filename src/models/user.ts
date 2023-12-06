@@ -1,6 +1,15 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model, Document } from 'mongoose';
 import bcrypt from 'bcrypt';
+import validator from 'validator';
 import { User, UserModel } from '../types';
+
+interface UserDocument extends Document {
+  name: string;
+  about: string;
+  avatar: string;
+  email: string;
+  password: string;
+}
 
 const userSchema = new Schema<User, UserModel>({
   name: {
@@ -13,6 +22,10 @@ const userSchema = new Schema<User, UserModel>({
     type: String,
     unique: true,
     required: true,
+    validate: {
+      validator: (v: string) => validator.isEmail(v),
+      message: 'Неправильный формат почты',
+    },
   },
   password: {
     type: String,
@@ -36,11 +49,19 @@ const userSchema = new Schema<User, UserModel>({
   avatar: {
     type: String,
     default: 'https://tvcenter.ru/wp-content/uploads/2021/02/image-4.jpg',
+    validate: {
+      validator: (v: string) => {
+        const regex =
+          /^(https?:\/\/)(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
+        regex.test(v);
+      },
+      message: 'Неправильный формат URL',
+    },
   },
 });
 
 userSchema.static('findUserByCredentials', async function findUserByCredentials(email: string, password: string) {
-  const user = await this.findOne({ email });
+  const user: UserDocument | null = await this.findOne({ email });
   if (!user) {
     return Promise.reject(new Error('Неправильные почта или пароль'));
   }

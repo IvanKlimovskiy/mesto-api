@@ -10,6 +10,8 @@ import { createUser, login } from './controllers/users';
 import { ErrorStatusCode } from './types';
 import { errorLogger, requestLogger } from './middlewares/logger';
 
+mongoose.connect(`mongodb://127.0.0.1:${PORT_DB}/${DB_NAME}`);
+
 const app = express();
 
 app.use(express.static('./public'));
@@ -58,19 +60,6 @@ app.use((err: ErrorStatusCode, req: Request, res: Response, next: NextFunction) 
   next();
 });
 
-const start = async () => {
-  try {
-    await mongoose.connect(`mongodb://127.0.0.1:${PORT_DB}/${DB_NAME}`).then(() => {
-      console.log('Соединение с базой данных установлено');
-    });
-    app.listen(PORT, () => {
-      console.log(`Сервер запущен на ${PORT} порту!`);
-    });
-  } catch (err) {
-    console.log(err);
-  }
-};
-
-start().then(() => {
-  console.log(`Всё работает корректно`);
+app.listen(PORT, () => {
+  console.log(`Сервер запущен на ${PORT} порту!`);
 });
